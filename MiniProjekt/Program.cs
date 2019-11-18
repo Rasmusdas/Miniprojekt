@@ -3,53 +3,71 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace MiniProjekt
 {
-    class Program
+    class RekDynMiniProjekt
     {
-        static Dictionary<int, int> Values = new Dictionary<int, int>() { { 1,1 },{ 13,140 },{ 30,300 } };
+        /// <summary>
+        /// The main function.
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
+            List<Dictionary<int,int>> values = LoadValuesFromFile("values");
             string input = Console.ReadLine().Trim();
             int.TryParse(input, out int inputNumber);
-            //Console.WriteLine(RekCutChain(inputNumber, 0));
-            Console.WriteLine(IteCutChain(inputNumber));
-            foreach (var v in IteCutChainCuts(inputNumber))
+            foreach (var v in values)
             {
-                Console.WriteLine(v.Value);
+                Console.WriteLine(RekCutChain(inputNumber,0 , v));
+                Console.WriteLine(IteCutChain(inputNumber, v));
             }
             Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
 
-
-        static int RekCutChain(int length, int money)
+        /// <summary>
+        /// Cuts the chain in to smaller pieces to determine the value.
+        /// Works using recursion (very slow)
+        /// </summary>
+        /// <param name="length"></param>
+        /// <param name="money"></param>
+        /// <param name="values"></param>
+        /// <returns> The value of the chain </returns>
+        static int RekCutChain(int length, int money, Dictionary<int,int> values)
         {
             int highestvalue = -1;
-            foreach (var val in Values)
+            if (length <= 0)
+            {
+                return money + length;
+            }
+            foreach (var val in values)
             {
                 if(length >= val.Key)
                 {
-                    highestvalue = Math.Max(highestvalue,RekCutChain(length  - val.Key-1, money + val.Value+1));
+                    highestvalue = Math.Max(highestvalue,RekCutChain(length  - val.Key-1, money + val.Value+1, values));
                 }
-            }
-            if(highestvalue == -1)
-            {
-                return money + length;
             }
             return highestvalue;
         }
 
-        static int IteCutChain(int l)
+        /// <summary>
+        /// Cuts the chain into smaller pieces to determine the value
+        /// Works using iteration (fast)
+        /// </summary>
+        /// <param name="l"></param>
+        /// <param name="values"></param>
+        /// <returns> The value of the chain </returns>
+        static int IteCutChain(int l, Dictionary<int,int> values)
         {
             int[] chain = new int[l+1];
             for (int i = 1; i < chain.Length; i++)
             {
                 int max = -1;
-                foreach (var v in Values)
+                foreach (var v in values)
                 {
-                    if(i > v.Key)
+                    if(i >= v.Key)
                     {
                         max = Math.Max(max, chain[i-1-v.Key]+v.Value+1);
                     }
@@ -63,40 +81,31 @@ namespace MiniProjekt
             return chain[l];
         }
 
-
-        static Dictionary<int,int> IteCutChainCuts(int l)
+        /// <summary>
+        /// Loads the file 'values' from the same directory as the program is ran from and formats it into values.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns> The values from the file </returns>
+        static List<Dictionary<int,int>> LoadValuesFromFile(string path)
         {
-            Dictionary<int, int> owo = new Dictionary<int, int>() {  };
-            foreach(var v in Values)
+            List<Dictionary<int, int>> vals = new List<Dictionary<int, int>>();
+            string[] fileContent = File.ReadAllLines(path);
+            foreach(string s in fileContent)
             {
-                owo.Add(v.Key,0);
-            }
-            int[] chain = new int[l + 1];
-            for (int i = 1; i < chain.Length; i++)
-            {
-                int max = -1;
-                int maxCut = -1;
-                foreach (var v in Values)
+                string[] sA = s.Split('|');
+                Dictionary<int, int> value = new Dictionary<int, int>();
+                foreach (string ss in sA)
                 {
-                    if (i > v.Key)
-                    {
-                        if (chain[i - v.Key-1] + v.Value+1 > max)
-                        {
-                            maxCut = v.Key;
-                        }
-                    }
-                    else if (i >= v.Key)
-                    {
-                        if(chain[i - v.Key] + v.Value > max)
-                        {
-                            maxCut = v.Key;
-                        }
-                    }
+                    Console.WriteLine("uwu");
+                    string[] ssA = ss.Split(',');
+                    
+                    int.TryParse(ssA[0], out int key);
+                    int.TryParse(ssA[1], out int val);
+                    value.Add(key,val);
                 }
-                owo[maxCut]++;
-                chain[i] = max;
+                vals.Add(value);
             }
-            return owo;
+            return vals;
         }
     }
 }
